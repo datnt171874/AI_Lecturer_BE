@@ -1,0 +1,195 @@
+openapi: 3.0.3
+info:
+  title: Lesson Management API
+  description: API for managing lessons, including creating lessons from uploaded files, retrieving lesson details, and generating videos.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Local server
+paths:
+  /api/lessons:
+    post:
+      summary: Create a new lesson
+      description: Creates a new lesson by uploading a file (e.g., .docx), associating it with a user, and processing it into segments, audio, and slides.
+      operationId: createLesson
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: integer
+                  description: ID of the user creating the lesson
+                  example: 1
+                title:
+                  type: string
+                  description: Title of the lesson
+                  example: "Introduction to AI"
+                file:
+                  type: string
+                  format: binary
+                  description: The lesson plan file (e.g., .docx)
+              required:
+                - userId
+                - title
+                - file
+      responses:
+        '200':
+          description: Lesson created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lesson'
+        '400':
+          description: Bad request (e.g., missing required fields)
+        '500':
+          description: Server error
+  /api/lessons/{id}:
+    get:
+      summary: Get lesson details
+      description: Retrieves the details of a lesson by its ID.
+      operationId: getLesson
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the lesson to retrieve
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Lesson retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lesson'
+        '404':
+          description: Lesson not found
+        '500':
+          description: Server error
+  /api/lessons/{id}/generate-video:
+    post:
+      summary: Generate a video for a lesson
+      description: Generates a video for the specified lesson by combining audio and slides.
+      operationId: generateVideo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID of the lesson to generate a video for
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Video generated successfully
+          content:
+            application/json:
+              schema Rosource:
+                $ref: '#/components/schemas/Video'
+        '404':
+          description: Lesson not found
+        '500':
+          description: Server error
+components:
+  schemas:
+    Lesson:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the lesson
+          example: 1
+        createdBy:
+          $ref: '#/components/schemas/User'
+        title:
+          type: string
+          description: Title of the lesson
+          example: "Introduction to AI"
+        textContent:
+          type: string
+          description: Text content of the lesson
+          example: "This is the content of the lesson..."
+        language:
+          type: string
+          description: Language of the lesson content
+          example: "vi"
+        status:
+          type: string
+          description: Status of the lesson (e.g., processing, segmented, completed)
+          example: "processing"
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the lesson was created
+          example: "2025-06-03T11:21:00+07:00"
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the user
+          example: 1
+        email:
+          type: string
+          description: Email of the user
+          example: "teacher@example.com"
+        password:
+          type: string
+          description: Password of the user (hashed)
+          example: "hashedpassword"
+        role:
+          type: string
+          description: Role of the user (e.g., lecturer)
+          example: "lecturer"
+        fullName:
+          type: string
+          description: Full name of the user
+          example: "Nguyen Van A"
+        phone:
+          type: string
+          description: Phone number of the user (nullable)
+          example: "+84987654321"
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the user was created
+          example: "2025-06-03T11:21:00+07:00"
+    Video:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the video
+          example: 1
+        lesson:
+          $ref: '#/components/schemas/Lesson'
+        videoUrl:
+          type: string
+          description: URL of the generated video
+          example: "s3://video/1.mp4"
+        format:
+          type: string
+          description: Format of the video
+          example: "mp4"
+        duration:
+          type: number
+          format: float
+          description: Duration of the video in seconds
+          example: 300.5
+        resolution:
+          type: string
+          description: Resolution of the video
+          example: "1920x1080"
+        status:
+          type: string
+          description: Status of the video generation (e.g., generating, completed)
+          example: "completed"
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the video was created
+          example: "2025-06-03T11:21:00+07:00"
